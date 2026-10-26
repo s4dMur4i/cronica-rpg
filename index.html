@@ -80,5 +80,17 @@ function salvar(){let dados={};document.querySelectorAll("input").forEach(i=>dad
 function carregar(){let dados=JSON.parse(localStorage.getItem("cronica-personagem")||"null");if(!dados){document.getElementById("status").textContent="Nenhum personagem salvo ainda.";return}Object.keys(dados).forEach(k=>{let e=document.getElementById(k);if(e)e.value=dados[k]});atualizar();document.getElementById("status").textContent="Personagem carregado!"}
 atualizar();
 </script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js")
+      .catch(error => console.error("Erro ao registrar SW:", error));
+  });
+}
+</script>
+</body>
+</html>
+
 </body>
 </html>
