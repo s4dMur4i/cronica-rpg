@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#15151c">
+<title>Crônica RPG</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#15151c;color:#eee;font-family:system-ui,sans-serif;padding:20px}
+main{max-width:600px;margin:auto}
+h1{color:#e5bd72;margin-bottom:5px}
+p{color:#aaa}
+.card{background:#22222d;border:1px solid #393947;border-radius:14px;padding:16px;margin:14px 0}
+label{display:block;color:#bbb;font-size:14px;margin:10px 0 5px}
+input,select,button{width:100%;padding:12px;border-radius:9px;border:1px solid #444454;background:#171720;color:white;font-size:16px}
+button{background:#bd914a;color:#17120a;border:0;font-weight:bold;margin-top:12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:#171720;padding:12px 4px;text-align:center;border-radius:10px}
+.stat input{text-align:center;padding:7px}
+.big{font-size:24px;color:#e5bd72;font-weight:bold}
+</style>
+</head>
+<body>
+<main>
+<h1>⚔ Crônica RPG</h1>
+<p>Sua aventura começa aqui · D&D 2024</p>
+<div class="card">
+<h2>Personagem</h2>
+<label>Nome</label><input id="nome" placeholder="Nome do herói">
+<label>Classe e nível</label><input id="classe" placeholder="Ex.: Guerreiro 1">
+<label>Raça / espécie</label><input id="raca" placeholder="Ex.: Humano">
+<label>Antecedente</label><input id="antecedente" placeholder="Ex.: Soldado">
+</div>
+<div class="card">
+<h2>Atributos</h2>
+<div class="stats">
+<div class="stat">FOR<input id="for" type="number" value="10" min="1" max="30"><div id="mfor" class="big">+0</div></div>
+<div class="stat">DES<input id="des" type="number" value="10" min="1" max="30"><div id="mdes" class="big">+0</div></div>
+<div class="stat">CON<input id="con" type="number" value="10" min="1" max="30"><div id="mcon" class="big">+0</div></div>
+<div class="stat">INT<input id="int" type="number" value="10" min="1" max="30"><div id="mint" class="big">+0</div></div>
+<div class="stat">SAB<input id="sab" type="number" value="10" min="1" max="30"><div id="msab" class="big">+0</div></div>
+<div class="stat">CAR<input id="car" type="number" value="10" min="1" max="30"><div id="mcar" class="big">+0</div></div>
+</div>
+</div>
+<div class="card">
+<h2>Combate</h2>
+<label>Pontos de vida máximos</label><input id="pvmax" type="number" value="10">
+<label>Pontos de vida atuais</label><input id="pv" type="number" value="10">
+<label>Classe de Armadura</label><input id="ca" type="number" value="10">
+<label>Deslocamento (pés)</label><input id="desloc" type="number" value="30">
+</div>
+<div class="card">
+<h2>Rolagem de dados</h2>
+<select id="dado">
+<option value="4">d4</option><option value="6">d6</option>
+<option value="8">d8</option><option value="10">d10</option>
+<option value="12">d12</option><option value="20" selected>d20</option>
+<option value="100">d100</option>
+</select>
+<button onclick="rolar()">Rolar dado</button>
+<p id="resultado">O resultado aparecerá aqui.</p>
+</div>
+<div class="card">
+<button onclick="salvar()">Salvar personagem neste aparelho</button>
+<button onclick="carregar()">Carregar personagem salvo</button>
+<p id="status"></p>
+</div>
+</main>
+<script>
+const atributos=["for","des","con","int","sab","car"];
+function mod(v){let n=Math.floor((Number(v)-10)/2);return n>=0?"+"+n:String(n)}
+function atualizar(){atributos.forEach(a=>document.getElementById("m"+a).textContent=mod(document.getElementById(a).value))}
+atributos.forEach(a=>document.getElementById(a).addEventListener("input",atualizar));
+function rolar(){let d=Number(document.getElementById("dado").value);let n=1+Math.floor(Math.random()*d);document.getElementById("resultado").textContent="Resultado: "+n+" (d"+d+")"}
+function salvar(){let dados={};document.querySelectorAll("input").forEach(i=>dados[i.id]=i.value);localStorage.setItem("cronica-personagem",JSON.stringify(dados));document.getElementById("status").textContent="Personagem salvo neste aparelho!"}
+function carregar(){let dados=JSON.parse(localStorage.getItem("cronica-personagem")||"null");if(!dados){document.getElementById("status").textContent="Nenhum personagem salvo ainda.";return}Object.keys(dados).forEach(k=>{let e=document.getElementById(k);if(e)e.value=dados[k]});atualizar();document.getElementById("status").textContent="Personagem carregado!"}
+atualizar();
+</script>
+</body>
+</html>
