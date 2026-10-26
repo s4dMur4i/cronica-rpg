@@ -8,5 +8,12 @@
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#15151c",
-  "theme_color": "#15151c"
+  "theme_color": "#15151c",
+  "icons": [
+    {
+      "src": "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2694.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    }
+  ]
 }
