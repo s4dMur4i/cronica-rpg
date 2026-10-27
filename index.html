@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -23,7 +22,7 @@ h3{font-size:15px;margin:18px 0 8px}
 label{display:block;color:#bbb;font-size:12px;margin-bottom:5px}
 input,select,textarea{width:100%;min-width:0;padding:10px;background:#15151c;color:#fff;border:1px solid #41404d;border-radius:7px;font:inherit}
 textarea{min-height:85px}
-button{padding:10px 12px;border-radius:7px;border:1px solid #d6b36a;background:#d6b36a;color:#15151c;font-weight:bold}
+button{padding:10px 12px;border-radius:7px;border:1px solid #d6b36a;background:#d6b36a;color:#15151c;font-weight:bold;cursor:pointer}
 .secondary{background:#302f3b;color:#fff;border-color:#555}
 .danger{background:#512a32;color:white;border-color:#78414b}
 .actions{display:flex;flex-wrap:wrap;gap:8px}
@@ -41,6 +40,15 @@ button{padding:10px 12px;border-radius:7px;border:1px solid #d6b36a;background:#
 .skill input[type=checkbox]{width:auto}
 .muted{font-size:12px;color:#bbb}
 #status,#diceResult{color:#d6b36a;margin-top:12px;overflow-wrap:anywhere}
+.item-card,.spell-card{border:1px solid #41404d;border-radius:8px;padding:12px;margin:8px 0}
+.item-card h4{margin:0;color:#d6b36a;font-size:15px}
+.item-card .grid{margin-top:8px}
+.item-card textarea{margin-top:8px}
+.item-card button,.spell-card button{margin-top:8px}
+.inline-check{display:flex;align-items:center;gap:7px;margin-top:8px}
+.inline-check input{width:auto}
+.spell-card h3{margin-top:0;color:#d6b36a}
+.spell-description{white-space:pre-wrap;overflow-wrap:anywhere}
 @media(min-width:600px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 </head>
@@ -129,29 +137,64 @@ button{padding:10px 12px;border-radius:7px;border:1px solid #d6b36a;background:#
 
 <section>
 <h2>Inventário</h2>
+<p class="muted">Registre cada item separadamente. As alterações são salvas na ficha selecionada.</p>
+
+<h3>Moedas</h3>
 <div class="grid">
-<div><label>Cobre (PC)</label><input id="pc" data-save type="number" value="0"></div>
-<div><label>Prata (PP)</label><input id="pp" data-save type="number" value="0"></div>
-<div><label>Electrum (PE)</label><input id="pe" data-save type="number" value="0"></div>
-<div><label>Ouro (PO)</label><input id="po" data-save type="number" value="0"></div>
-<div><label>Platina (PL)</label><input id="pl" data-save type="number" value="0"></div>
+<div><label>Cobre (PC)</label><input id="pc" data-save type="number" min="0" value="0"></div>
+<div><label>Prata (PP)</label><input id="pp" data-save type="number" min="0" value="0"></div>
+<div><label>Electrum (PE)</label><input id="pe" data-save type="number" min="0" value="0"></div>
+<div><label>Ouro (PO)</label><input id="po" data-save type="number" min="0" value="0"></div>
+<div><label>Platina (PL)</label><input id="pl" data-save type="number" min="0" value="0"></div>
 </div>
-<h3>Equipamentos e itens</h3>
-<textarea id="inventario" data-save placeholder="Armas, armaduras, ferramentas e poções..."></textarea>
+
+<h3>Adicionar item</h3>
+<div class="grid">
+<div><label>Nome do item</label><input id="itemNome" placeholder="Ex.: Espada longa"></div>
+<div><label>Quantidade</label><input id="itemQtd" type="number" min="1" value="1"></div>
+<div><label>Peso por unidade</label><input id="itemPeso" type="number" min="0" step="0.1" value="0"></div>
+</div>
+<label class="inline-check"><input id="itemEquipado" type="checkbox"> Equipado</label>
+<label for="itemNotas">Observações</label>
+<textarea id="itemNotas" placeholder="Propriedades, descrição ou detalhes do item"></textarea>
+<button type="button" onclick="addInventoryItem()">+ Adicionar item</button>
+
+<h3>Itens carregados</h3>
+<div id="inventoryList"></div>
+<p class="muted">Peso total carregado: <strong id="inventoryWeight">0</strong></p>
+<input id="inventoryData" data-save type="hidden" value="[]">
 </section>
 
 <section>
-<h2>Magias</h2>
+<h2>Grimório de Magias</h2>
 <div class="grid">
 <div><label>Atributo de conjuração</label><select id="atributoMagia" data-save><option value="INT">Inteligência</option><option value="SAB">Sabedoria</option><option value="CAR">Carisma</option></select></div>
 <div><label>Bônus mágico adicional</label><input id="bonusMagia" data-save type="number" value="0"></div>
 <div><label>CD para resistir</label><input id="cdMagia" readonly value="12"></div>
 <div><label>Ataque mágico</label><input id="ataqueMagia" readonly value="+2"></div>
 </div>
-<h3>Lista de magias</h3>
-<textarea id="magias" data-save placeholder="Nome, nível, alcance, duração e efeitos..."></textarea>
+
+<h3>Adicionar magia</h3>
+<div class="grid">
+<div><label>Nome da magia</label><input id="spellNome" placeholder="Ex.: Bola de Fogo"></div>
+<div><label>Nível</label><select id="spellNivel"><option value="Truque">Truque</option><option value="1">1º nível</option><option value="2">2º nível</option><option value="3">3º nível</option><option value="4">4º nível</option><option value="5">5º nível</option><option value="6">6º nível</option><option value="7">7º nível</option><option value="8">8º nível</option><option value="9">9º nível</option></select></div>
+<div><label>Escola</label><select id="spellEscola"><option>Abjuração</option><option>Adivinhação</option><option>Conjuração</option><option>Encantamento</option><option>Evocação</option><option>Ilusão</option><option>Necromancia</option><option>Transmutação</option></select></div>
+<div><label>Tempo de conjuração</label><input id="spellTempo" placeholder="Ex.: 1 ação"></div>
+<div><label>Alcance</label><input id="spellAlcance" placeholder="Ex.: 18 metros"></div>
+<div><label>Duração</label><input id="spellDuracao" placeholder="Ex.: Instantânea"></div>
+</div>
+<label for="spellComponentes">Componentes</label>
+<input id="spellComponentes" placeholder="Ex.: V, S, M">
+<label for="spellDescricao">Descrição e efeitos</label>
+<textarea id="spellDescricao" placeholder="Descreva os efeitos da magia..."></textarea>
+<button type="button" onclick="addSpell()">+ Adicionar magia</button>
+
+<h3>Magias conhecidas</h3>
+<div id="spellList"></div>
+<input id="spellsData" data-save type="hidden" value="[]">
+
 <h3>Espaços de magia e usos</h3>
-<textarea id="espacos" data-save></textarea>
+<textarea id="espacos" data-save placeholder="Espaços disponíveis, usos por descanso e observações..."></textarea>
 </section>
 
 <section>
@@ -360,6 +403,273 @@ function addAttack(data={}){
  $("attacks").appendChild(row);
 }
 
+/* INVENTÁRIO: itens individuais por personagem */
+
+function getInventory(){
+ try{
+  const data = JSON.parse($("inventoryData").value || "[]");
+  return Array.isArray(data) ? data : [];
+ }catch(error){
+  return [];
+ }
+}
+
+function setInventory(items){
+ $("inventoryData").value = JSON.stringify(items);
+ renderInventory();
+ autoSaveCurrent();
+}
+
+function addInventoryItem(){
+ const name = $("itemNome").value.trim();
+
+ if(!name){
+  alert("Digite o nome do item.");
+  return;
+ }
+
+ const items = getInventory();
+
+ items.push({
+  id: Date.now()+"-"+Math.random(),
+  name,
+  quantity: Math.max(1,Number($("itemQtd").value)||1),
+  weight: Math.max(0,Number($("itemPeso").value)||0),
+  equipped: $("itemEquipado").checked,
+  notes: $("itemNotas").value
+ });
+
+ $("itemNome").value = "";
+ $("itemQtd").value = "1";
+ $("itemPeso").value = "0";
+ $("itemEquipado").checked = false;
+ $("itemNotas").value = "";
+
+ setInventory(items);
+}
+
+function renderInventory(){
+ const list = $("inventoryList");
+ if(!list) return;
+
+ list.innerHTML = "";
+ const items = getInventory();
+ let totalWeight = 0;
+
+ items.forEach((item,index)=>{
+  totalWeight +=
+   (Number(item.weight)||0)*(Number(item.quantity)||0);
+
+  const card = document.createElement("div");
+  card.className = "item-card";
+
+  const title = document.createElement("h4");
+  title.textContent = item.name || "Item sem nome";
+  card.appendChild(title);
+
+  const grid = document.createElement("div");
+  grid.className = "grid";
+
+  function addNumberField(labelText,value,onChange){
+   const wrap = document.createElement("div");
+   const label = document.createElement("label");
+   label.textContent = labelText;
+
+   const input = document.createElement("input");
+   input.type = "number";
+   input.min = "0";
+   input.step = "any";
+   input.value = value ?? 0;
+
+   input.addEventListener("change",()=>{
+    onChange(input.value);
+   });
+
+   wrap.append(label,input);
+   grid.appendChild(wrap);
+  }
+
+  addNumberField("Quantidade",item.quantity,value=>{
+   const all = getInventory();
+   if(!all[index]) return;
+   all[index].quantity = Math.max(0,Number(value)||0);
+   setInventory(all);
+  });
+
+  addNumberField("Peso por unidade",item.weight,value=>{
+   const all = getInventory();
+   if(!all[index]) return;
+   all[index].weight = Math.max(0,Number(value)||0);
+   setInventory(all);
+  });
+
+  card.appendChild(grid);
+
+  const equippedLabel = document.createElement("label");
+  equippedLabel.className = "inline-check";
+
+  const equipped = document.createElement("input");
+  equipped.type = "checkbox";
+  equipped.checked = !!item.equipped;
+
+  equipped.addEventListener("change",()=>{
+   const all = getInventory();
+   if(!all[index]) return;
+   all[index].equipped = equipped.checked;
+   setInventory(all);
+  });
+
+  equippedLabel.append(
+   equipped,
+   document.createTextNode(" Equipado")
+  );
+  card.appendChild(equippedLabel);
+
+  const notesLabel = document.createElement("label");
+  notesLabel.textContent = "Observações";
+
+  const notes = document.createElement("textarea");
+  notes.placeholder = "Propriedades, descrição ou detalhes";
+  notes.value = item.notes || "";
+
+  notes.addEventListener("change",()=>{
+   const all = getInventory();
+   if(!all[index]) return;
+   all[index].notes = notes.value;
+   setInventory(all);
+  });
+
+  card.append(notesLabel,notes);
+
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "danger";
+  remove.textContent = "Remover item";
+
+  remove.addEventListener("click",()=>{
+   const all = getInventory();
+   all.splice(index,1);
+   setInventory(all);
+  });
+
+  card.appendChild(remove);
+  list.appendChild(card);
+ });
+
+ $("inventoryWeight").textContent =
+  String(Math.round(totalWeight*100)/100);
+}
+
+/* GRIMÓRIO: magias individuais por personagem */
+
+function getSpells(){
+ try{
+  const data = JSON.parse($("spellsData").value || "[]");
+  return Array.isArray(data) ? data : [];
+ }catch(error){
+  return [];
+ }
+}
+
+function setSpells(spells){
+ $("spellsData").value = JSON.stringify(spells);
+ renderSpells();
+ autoSaveCurrent();
+}
+
+function addSpell(){
+ const name = $("spellNome").value.trim();
+
+ if(!name){
+  alert("Digite o nome da magia.");
+  return;
+ }
+
+ const spells = getSpells();
+
+ spells.push({
+  id: Date.now()+"-"+Math.random(),
+  name,
+  level: $("spellNivel").value,
+  school: $("spellEscola").value,
+  time: $("spellTempo").value.trim(),
+  range: $("spellAlcance").value.trim(),
+  duration: $("spellDuracao").value.trim(),
+  components: $("spellComponentes").value.trim(),
+  description: $("spellDescricao").value.trim()
+ });
+
+ [
+  "spellNome",
+  "spellTempo",
+  "spellAlcance",
+  "spellDuracao",
+  "spellComponentes",
+  "spellDescricao"
+ ].forEach(id=>{
+  $(id).value = "";
+ });
+
+ $("spellNivel").value = "Truque";
+ $("spellEscola").selectedIndex = 0;
+
+ setSpells(spells);
+}
+
+function renderSpells(){
+ const list = $("spellList");
+ if(!list) return;
+
+ list.innerHTML = "";
+
+ getSpells().forEach((spell,index)=>{
+  const card = document.createElement("div");
+  card.className = "spell-card";
+
+  const title = document.createElement("h3");
+  title.textContent =
+   (spell.name || "Magia sem nome")+" — "+
+   (spell.level==="Truque" ? "Truque" : (spell.level || "Nível não informado"));
+  card.appendChild(title);
+
+  const details = document.createElement("p");
+  details.className = "muted";
+  details.textContent = [
+   spell.school,
+   spell.time ? "Conjuração: "+spell.time : "",
+   spell.range ? "Alcance: "+spell.range : "",
+   spell.duration ? "Duração: "+spell.duration : ""
+  ].filter(Boolean).join(" · ");
+
+  card.appendChild(details);
+
+  if(spell.components){
+   const components = document.createElement("p");
+   components.textContent = "Componentes: "+spell.components;
+   card.appendChild(components);
+  }
+
+  const description = document.createElement("p");
+  description.className = "spell-description";
+  description.textContent = spell.description || "Sem descrição.";
+  card.appendChild(description);
+
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "danger";
+  remove.textContent = "Remover magia";
+
+  remove.addEventListener("click",()=>{
+   const all = getSpells();
+   all.splice(index,1);
+   setSpells(all);
+  });
+
+  card.appendChild(remove);
+  list.appendChild(card);
+ });
+}
+
 function collect(){
  const data = {};
 
@@ -392,6 +702,43 @@ function apply(data={}){
 
  $("attacks").innerHTML = "";
  (Array.isArray(data.attacks) ? data.attacks : []).forEach(addAttack);
+
+ /*
+  * Migração de fichas antigas:
+  * transforma os textos antigos em uma entrada individual,
+  * preservando as anotações já salvas.
+  */
+ if(data.inventoryData){
+  $("inventoryData").value = data.inventoryData;
+ }else if(typeof data.inventario==="string" && data.inventario.trim()){
+  $("inventoryData").value = JSON.stringify([{
+   id:"migrado-"+Date.now(),
+   name:"Itens da ficha antiga",
+   quantity:1,
+   weight:0,
+   equipped:false,
+   notes:data.inventario
+  }]);
+ }
+
+ if(data.spellsData){
+  $("spellsData").value = data.spellsData;
+ }else if(typeof data.magias==="string" && data.magias.trim()){
+  $("spellsData").value = JSON.stringify([{
+   id:"migrado-"+Date.now(),
+   name:"Magias da ficha antiga",
+   level:"Anotações antigas",
+   school:"",
+   time:"",
+   range:"",
+   duration:"",
+   components:"",
+   description:data.magias
+  }]);
+ }
+
+ renderInventory();
+ renderSpells();
  update();
 }
 
@@ -550,6 +897,9 @@ function resetFields(){
  $("ca").value = 10;
  $("deslocamento").value = 30;
  $("attacks").innerHTML = "";
+
+ renderInventory();
+ renderSpells();
  update();
 }
 
