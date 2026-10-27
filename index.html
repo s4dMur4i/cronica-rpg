@@ -2,95 +2,347 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<link rel="manifest" href="./manifest.webmanifest">
-<meta name="mobile-web-app-capable" content="yes">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#15151c">
+<meta name="description" content="Ficha de personagem de D&D 2024">
+<link rel="manifest" href="./manifest.webmanifest">
 <title>Crônica RPG</title>
 <style>
+:root{color-scheme:dark;--bg:#15151c;--panel:#22222d;--gold:#d6b36a;--text:#f2f0ea;--muted:#aaa8b5;--border:#41404d}
 *{box-sizing:border-box}
-body{margin:0;background:#15151c;color:#eee;font-family:system-ui,sans-serif;padding:20px}
-main{max-width:600px;margin:auto}
-h1{color:#e5bd72;margin-bottom:5px}
-p{color:#aaa}
-.card{background:#22222d;border:1px solid #393947;border-radius:14px;padding:16px;margin:14px 0}
-label{display:block;color:#bbb;font-size:14px;margin:10px 0 5px}
-input,select,button{width:100%;padding:12px;border-radius:9px;border:1px solid #444454;background:#171720;color:white;font-size:16px}
-button{background:#bd914a;color:#17120a;border:0;font-weight:bold;margin-top:12px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.stat{background:#171720;padding:12px 4px;text-align:center;border-radius:10px}
-.stat input{text-align:center;padding:7px}
-.big{font-size:24px;color:#e5bd72;font-weight:bold}
+body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,sans-serif}
+header{padding:22px 16px;background:linear-gradient(135deg,#30283a,#15151c);border-bottom:1px solid var(--border)}
+h1{margin:0;color:var(--gold);font-size:27px}
+header p{margin:5px 0 0;color:var(--muted)}
+main{max-width:850px;margin:auto;padding:12px}
+section{background:var(--panel);border:1px solid var(--border);border-radius:13px;padding:14px;margin-bottom:13px}
+h2{font-size:19px;color:var(--gold);margin:0 0 13px}
+h3{font-size:15px;margin:18px 0 9px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.field{min-width:0}
+label{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}
+input,select,textarea{width:100%;min-width:0;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit}
+textarea{min-height:90px;resize:vertical}
+input[type=checkbox]{width:auto;accent-color:var(--gold)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{background:#2c2b38;border:1px solid var(--border);border-radius:9px;padding:8px 4px;text-align:center}
+.stat input{text-align:center;font-size:21px;font-weight:bold;padding:5px 2px}
+.stat strong{display:block;color:var(--gold);font-size:21px}
+.stat small{color:var(--muted)}
+button{padding:11px 13px;border:1px solid var(--gold);border-radius:8px;background:var(--gold);color:#17151a;font-weight:bold;font-size:14px}
+button.secondary{background:#302f3b;color:var(--text);border-color:var(--border)}
+button.danger{background:#512a32;color:white;border-color:#78414b}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.line{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border)}
+.line:last-child{border:0}
+.line .grow{flex:1;min-width:0}
+.line strong{color:var(--gold)}
+.line label{margin:0;font-size:13px}
+.skill{display:grid;grid-template-columns:25px minmax(0,1fr) 36px 42px 25px;align-items:center;gap:4px;padding:7px 0;border-bottom:1px solid var(--border)}
+.skill span{font-size:13px}
+.skill output{text-align:center;color:var(--gold);font-weight:bold}
+.muted{font-size:12px;color:var(--muted)}
+#status,#diceResult{margin-top:12px;color:var(--gold)}
+@media(min-width:600px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 </head>
 <body>
-<main>
+<header>
 <h1>⚔ Crônica RPG</h1>
-<p>Sua aventura começa aqui · D&D 2024</p>
-<div class="card">
-<h2>Personagem</h2>
-<label>Nome</label><input id="nome" placeholder="Nome do herói">
-<label>Classe e nível</label><input id="classe" placeholder="Ex.: Guerreiro 1">
-<label>Raça / espécie</label><input id="raca" placeholder="Ex.: Humano">
-<label>Antecedente</label><input id="antecedente" placeholder="Ex.: Soldado">
+<p>Sua aventura começa na ficha.</p>
+</header>
+
+<main>
+<section>
+<h2>Identidade</h2>
+<div class="grid">
+<div class="field"><label>Nome do personagem</label><input id="nome" data-save placeholder="Nome do herói"></div>
+<div class="field"><label>Jogador</label><input id="jogador" data-save></div>
+<div class="field"><label>Classe</label><input id="classe" data-save placeholder="Guerreiro, mago..."></div>
+<div class="field"><label>Espécie</label><input id="especie" data-save></div>
+<div class="field"><label>Antecedente</label><input id="antecedente" data-save></div>
+<div class="field"><label>Nível</label><input id="nivel" data-save type="number" min="1" max="20" value="1"></div>
+<div class="field"><label>Experiência</label><input id="xp" data-save type="number" min="0" value="0"></div>
+<div class="field"><label>Tendência</label><input id="tendencia" data-save></div>
+<div class="field"><label>Inspiração heroica</label><select id="inspiracao" data-save><option>Não</option><option>Sim</option></select></div>
 </div>
-<div class="card">
+</section>
+
+<section>
 <h2>Atributos</h2>
+<p class="muted">Os modificadores são calculados automaticamente.</p>
 <div class="stats">
-<div class="stat">FOR<input id="for" type="number" value="10" min="1" max="30"><div id="mfor" class="big">+0</div></div>
-<div class="stat">DES<input id="des" type="number" value="10" min="1" max="30"><div id="mdes" class="big">+0</div></div>
-<div class="stat">CON<input id="con" type="number" value="10" min="1" max="30"><div id="mcon" class="big">+0</div></div>
-<div class="stat">INT<input id="int" type="number" value="10" min="1" max="30"><div id="mint" class="big">+0</div></div>
-<div class="stat">SAB<input id="sab" type="number" value="10" min="1" max="30"><div id="msab" class="big">+0</div></div>
-<div class="stat">CAR<input id="car" type="number" value="10" min="1" max="30"><div id="mcar" class="big">+0</div></div>
+<div class="stat"><label>Força</label><input id="FOR" data-save class="ability" type="number" value="10"><strong id="mod-FOR">+0</strong><small>FOR</small></div>
+<div class="stat"><label>Destreza</label><input id="DES" data-save class="ability" type="number" value="10"><strong id="mod-DES">+0</strong><small>DES</small></div>
+<div class="stat"><label>Constituição</label><input id="CON" data-save class="ability" type="number" value="10"><strong id="mod-CON">+0</strong><small>CON</small></div>
+<div class="stat"><label>Inteligência</label><input id="INT" data-save class="ability" type="number" value="10"><strong id="mod-INT">+0</strong><small>INT</small></div>
+<div class="stat"><label>Sabedoria</label><input id="SAB" data-save class="ability" type="number" value="10"><strong id="mod-SAB">+0</strong><small>SAB</small></div>
+<div class="stat"><label>Carisma</label><input id="CAR" data-save class="ability" type="number" value="10"><strong id="mod-CAR">+0</strong><small>CAR</small></div>
 </div>
+<div class="grid" style="margin-top:12px">
+<div class="field"><label>Bônus de proficiência extra</label><input id="bonusExtra" data-save type="number" value="0"></div>
+<div class="field"><label>Bônus de proficiência calculado</label><input id="profDisplay" readonly value="+2"></div>
 </div>
-<div class="card">
+</section>
+
+<section>
+<h2>Perícias</h2>
+<p class="muted">Marque Prof. para proficiência e Esp. para especialização. A especialização só conta com proficiência.</p>
+<div id="skills"></div>
+</section>
+
+<section>
+<h2>Testes de resistência</h2>
+<div id="saves"></div>
+</section>
+
+<section>
 <h2>Combate</h2>
-<label>Pontos de vida máximos</label><input id="pvmax" type="number" value="10">
-<label>Pontos de vida atuais</label><input id="pv" type="number" value="10">
-<label>Classe de Armadura</label><input id="ca" type="number" value="10">
-<label>Deslocamento (pés)</label><input id="desloc" type="number" value="30">
+<div class="grid">
+<div class="field"><label>PV atuais</label><input id="pvAtual" data-save type="number" value="10"></div>
+<div class="field"><label>PV máximos</label><input id="pvMax" data-save type="number" value="10"></div>
+<div class="field"><label>PV temporários</label><input id="pvTemp" data-save type="number" value="0"></div>
+<div class="field"><label>Classe de Armadura</label><input id="ca" data-save type="number" value="10"></div>
+<div class="field"><label>Bônus extra de iniciativa</label><input id="iniExtra" data-save type="number" value="0"></div>
+<div class="field"><label>Iniciativa total</label><input id="iniTotal" readonly value="+0"></div>
+<div class="field"><label>Deslocamento em pés</label><input id="deslocamento" data-save type="number" value="30"></div>
+<div class="field"><label>Dados de vida</label><input id="dadosVida" data-save placeholder="Ex.: 1d10"></div>
+<div class="field"><label>Nível de exaustão</label><input id="exaustao" data-save type="number" min="0" max="6" value="0"></div>
 </div>
-<div class="card">
+<h3>Ataques</h3>
+<div id="attacks"></div>
+<button type="button" class="secondary" onclick="addAttack()">+ Adicionar ataque</button>
+<h3>Condições e recursos</h3>
+<textarea id="condicoes" data-save placeholder="Condições, recursos de classe e usos disponíveis..."></textarea>
+</section>
+
+<section>
+<h2>Inventário</h2>
+<div class="grid">
+<div class="field"><label>Peças de cobre (PC)</label><input id="pc" data-save type="number" value="0"></div>
+<div class="field"><label>Peças de prata (PP)</label><input id="pp" data-save type="number" value="0"></div>
+<div class="field"><label>Peças de electrum (PE)</label><input id="pe" data-save type="number" value="0"></div>
+<div class="field"><label>Peças de ouro (PO)</label><input id="po" data-save type="number" value="0"></div>
+<div class="field"><label>Peças de platina (PL)</label><input id="pl" data-save type="number" value="0"></div>
+</div>
+<h3>Equipamentos e itens</h3>
+<textarea id="inventario" data-save placeholder="Armas, armaduras, ferramentas, poções e outros itens..."></textarea>
+</section>
+
+<section>
+<h2>Magias</h2>
+<div class="grid">
+<div class="field"><label>Atributo de conjuração</label><select id="atributoMagia" data-save><option value="INT">Inteligência</option><option value="SAB">Sabedoria</option><option value="CAR">Carisma</option></select></div>
+<div class="field"><label>Bônus mágico extra</label><input id="bonusMagia" data-save type="number" value="0"></div>
+<div class="field"><label>CD para resistir às magias</label><input id="cdMagia" readonly value="12"></div>
+<div class="field"><label>Bônus de ataque mágico</label><input id="ataqueMagia" readonly value="+2"></div>
+</div>
+<h3>Lista de magias</h3>
+<textarea id="magias" data-save placeholder="Nome, nível, alcance, duração e descrição das magias..."></textarea>
+<h3>Espaços de magia</h3>
+<textarea id="espacos" data-save placeholder="Espaços por nível, usos disponíveis e espaços gastos..."></textarea>
+</section>
+
+<section>
+<h2>Características e história</h2>
+<label>Características de classe, espécie e talentos</label>
+<textarea id="caracteristicas" data-save></textarea>
+<label>Aparência, personalidade e história</label>
+<textarea id="historia" data-save></textarea>
+<label>Anotações da campanha</label>
+<textarea id="anotacoes" data-save></textarea>
+</section>
+
+<section>
 <h2>Rolagem de dados</h2>
-<select id="dado">
-<option value="4">d4</option><option value="6">d6</option>
-<option value="8">d8</option><option value="10">d10</option>
-<option value="12">d12</option><option value="20" selected>d20</option>
-<option value="100">d100</option>
-</select>
-<button onclick="rolar()">Rolar dado</button>
-<p id="resultado">O resultado aparecerá aqui.</p>
+<div class="grid">
+<div class="field"><label>Dado</label><select id="dado"><option value="4">d4</option><option value="6">d6</option><option value="8">d8</option><option value="10">d10</option><option value="12">d12</option><option value="20" selected>d20</option><option value="100">d100</option></select></div>
+<div class="field"><label>Quantidade</label><input id="quantidade" type="number" min="1" max="100" value="1"></div>
+<div class="field"><label>Modificador</label><input id="modDado" type="number" value="0"></div>
 </div>
-<div class="card">
-<button onclick="salvar()">Salvar personagem neste aparelho</button>
-<button onclick="carregar()">Carregar personagem salvo</button>
-<p id="status"></p>
+<div class="actions" style="margin-top:12px">
+<button type="button" onclick="rollDice()">Rolar dados</button>
+<button type="button" class="secondary" onclick="rollD20()">Teste de d20</button>
 </div>
+<div id="diceResult" aria-live="polite">Os dados aguardam sua ordem.</div>
+</section>
+
+<section>
+<h2>Salvar personagem</h2>
+<div class="actions">
+<button type="button" onclick="saveCharacter()">Salvar ficha</button>
+<button type="button" class="secondary" onclick="loadCharacter()">Carregar ficha</button>
+<button type="button" class="secondary" onclick="exportCharacter()">Exportar arquivo</button>
+<button type="button" class="danger" onclick="clearCharacter()">Limpar ficha</button>
+</div>
+<div id="status" role="status">Salve sua ficha neste dispositivo.</div>
+</section>
 </main>
-<script>
-const atributos=["for","des","con","int","sab","car"];
-function mod(v){let n=Math.floor((Number(v)-10)/2);return n>=0?"+"+n:String(n)}
-function atualizar(){atributos.forEach(a=>document.getElementById("m"+a).textContent=mod(document.getElementById(a).value))}
-atributos.forEach(a=>document.getElementById(a).addEventListener("input",atualizar));
-function rolar(){let d=Number(document.getElementById("dado").value);let n=1+Math.floor(Math.random()*d);document.getElementById("resultado").textContent="Resultado: "+n+" (d"+d+")"}
-function salvar(){let dados={};document.querySelectorAll("input").forEach(i=>dados[i.id]=i.value);localStorage.setItem("cronica-personagem",JSON.stringify(dados));document.getElementById("status").textContent="Personagem salvo neste aparelho!"}
-function carregar(){let dados=JSON.parse(localStorage.getItem("cronica-personagem")||"null");if(!dados){document.getElementById("status").textContent="Nenhum personagem salvo ainda.";return}Object.keys(dados).forEach(k=>{let e=document.getElementById(k);if(e)e.value=dados[k]});atualizar();document.getElementById("status").textContent="Personagem carregado!"}
-atualizar();
-</script>
+
+<footer style="text-align:center;color:#aaa8b5;padding:16px">Crônica RPG · D&D 2024</footer>
 
 <script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js")
-      .catch(error => console.error("Erro ao registrar SW:", error));
-  });
+const KEY="cronica-personagem";
+const abilities=["FOR","DES","CON","INT","SAB","CAR"];
+const skills=[
+["Acrobacia","DES"],["Adestrar Animais","SAB"],["Arcanismo","INT"],
+["Atletismo","FOR"],["Atuação","CAR"],["Enganação","CAR"],
+["Furtividade","DES"],["História","INT"],["Intimidação","CAR"],
+["Intuição","SAB"],["Investigação","INT"],["Medicina","SAB"],
+["Natureza","INT"],["Percepção","SAB"],["Persuasão","CAR"],
+["Prestidigitação","DES"],["Religião","INT"],["Sobrevivência","SAB"]
+];
+const saves=[["FOR","Força"],["DES","Destreza"],["CON","Constituição"],["INT","Inteligência"],["SAB","Sabedoria"],["CAR","Carisma"]];
+const $=id=>document.getElementById(id);
+const mod=n=>Math.floor(((Number(n)||10)-10)/2);
+const signed=n=>n>=0?"+"+n:String(n);
+
+function proficiency(){
+ let lvl=Math.max(1,Math.min(20,Number($("nivel").value)||1));
+ return 2+Math.floor((lvl-1)/4)+(Number($("bonusExtra").value)||0);
+}
+
+function buildRows(){
+ skills.forEach(([name,ability],i)=>{
+  const row=document.createElement("div");
+  row.className="skill";
+  row.innerHTML='<input type="checkbox" id="sp'+i+'" data-save aria-label="Proficiência em '+name+'"><span>'+name+' ('+ability+')</span><output id="sb'+i+'">+0</output><label style="display:flex;align-items:center;gap:3px"><input type="checkbox" id="se'+i+'" data-save aria-label="Especialização em '+name+'">Esp.</label>';
+  $("skills").appendChild(row);
+ });
+ saves.forEach(([a,name])=>{
+  const row=document.createElement("div");
+  row.className="line";
+  row.innerHTML='<input type="checkbox" id="save'+a+'" data-save aria-label="Proficiência em '+name+'"><div class="grow">'+name+'</div><span class="muted">Bônus</span><strong id="saveb'+a+'">+0</strong>';
+  $("saves").appendChild(row);
+ });
+}
+
+function update(){
+ const p=proficiency();
+ $("profDisplay").value=signed(p);
+ abilities.forEach(a=>$("mod-"+a).textContent=signed(mod($(a).value)));
+ $("iniTotal").value=signed(mod($("DES").value)+(Number($("iniExtra").value)||0));
+ skills.forEach(([name,a],i)=>{
+  const trained=$("sp"+i).checked;
+  const expert=$("se"+i).checked;
+  $("sb"+i).textContent=signed(mod($(a).value)+(trained?p:0)+(trained&&expert?p:0));
+ });
+ saves.forEach(([a])=>{
+  $("saveb"+a).textContent=signed(mod($(a).value)+($("save"+a).checked?p:0));
+ });
+ const a=$("atributoMagia").value;
+ const bonus=mod($(a).value)+p+(Number($("bonusMagia").value)||0);
+ $("cdMagia").value=8+bonus;
+ $("ataqueMagia").value=signed(bonus);
+}
+
+function addAttack(data={}){
+ const row=document.createElement("div");
+ row.className="line";
+ row.style.flexWrap="wrap";
+ row.innerHTML='<div class="field grow"><label>Nome do ataque</label><input data-save placeholder="Ex.: Espada longa"></div><div class="field" style="width:95px"><label>Bônus</label><input data-save type="number" value="0"></div><div class="field grow"><label>Dano e tipo</label><input data-save placeholder="Ex.: 1d8 cortante"></div><button type="button" class="danger" aria-label="Remover ataque">×</button>';
+ const inputs=row.querySelectorAll("input");
+ inputs[0].value=data.nome||"";
+ inputs[1].value=data.bonus??0;
+ inputs[2].value=data.dano||"";
+ row.querySelector("button").onclick=()=>row.remove();
+ $("attacks").appendChild(row);
+}
+
+function collect(){
+ const data={};
+ document.querySelectorAll("[data-save]").forEach(el=>{
+  if(el.id)data[el.id]=el.type==="checkbox"?el.checked:el.value;
+ });
+ data.attacks=[];
+ $("attacks").querySelectorAll(".line").forEach(row=>{
+  const inputs=row.querySelectorAll("input");
+  data.attacks.push({nome:inputs[0].value,bonus:inputs[1].value,dano:inputs[2].value});
+ });
+ return data;
+}
+
+function apply(data){
+ document.querySelectorAll("[data-save]").forEach(el=>{
+  if(!el.id||!(el.id in data))return;
+  if(el.type==="checkbox")el.checked=Boolean(data[el.id]);
+  else el.value=data[el.id];
+ });
+ $("attacks").innerHTML="";
+ (data.attacks||[]).forEach(addAttack);
+ update();
+}
+
+function saveCharacter(){
+ try{
+  localStorage.setItem(KEY,JSON.stringify(collect()));
+  $("status").textContent="Ficha salva neste dispositivo!";
+ }catch(e){$("status").textContent="Não foi possível salvar. Verifique o espaço disponível.";}
+}
+
+function loadCharacter(){
+ try{
+  const data=JSON.parse(localStorage.getItem(KEY)||"null");
+  if(!data){$("status").textContent="Nenhuma ficha salva neste dispositivo.";return;}
+  apply(data);
+  $("status").textContent="Ficha carregada!";
+ }catch(e){$("status").textContent="Não foi possível carregar a ficha salva.";}
+}
+
+function clearCharacter(){
+ if(!confirm("Tem certeza? Os campos atuais serão apagados. Salve ou exporte antes, se necessário."))return;
+ document.querySelectorAll("[data-save]").forEach(el=>{
+  if(el.type==="checkbox")el.checked=false;
+  else if(el.tagName==="SELECT")el.selectedIndex=0;
+  else if(el.type==="number")el.value=el.id==="nivel"?1:0;
+  else el.value="";
+ });
+ $("attacks").innerHTML="";
+ abilities.forEach(a=>$(a).value=10);
+ $("nivel").value=1;
+ $("pvAtual").value=10;$("pvMax").value=10;$("ca").value=10;$("deslocamento").value=30;
+ $("inspiracao").value="Não";$("dado").value="20";$("quantidade").value=1;$("modDado").value=0;
+ update();
+ $("status").textContent="Campos limpos. A ficha salva anteriormente não foi apagada.";
+}
+
+function exportCharacter(){
+ const blob=new Blob([JSON.stringify(collect(),null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+ a.href=url;a.download="cronica-personagem.json";a.click();
+ URL.revokeObjectURL(url);
+ $("status").textContent="Exportação solicitada.";
+}
+
+function rollDice(){
+ const sides=Number($("dado").value);
+ const count=Math.max(1,Math.min(100,Number($("quantidade").value)||1));
+ const bonus=Number($("modDado").value)||0;
+ const rolls=Array.from({length:count},()=>Math.floor(Math.random()*sides)+1);
+ const total=rolls.reduce((sum,n)=>sum+n,0)+bonus;
+ $("diceResult").textContent=rolls.join(" + ")+(bonus? " ("+signed(bonus)+")":"")+" = "+total;
+}
+
+function rollD20(){
+ $("dado").value="20";$("quantidade").value="1";rollDice();
+}
+
+buildRows();
+buildRows; 
+skills.forEach(()=>{});
+document.querySelectorAll("input,select").forEach(el=>{
+ el.addEventListener("input",update);
+ el.addEventListener("change",update);
+});
+update();
+
+if("serviceWorker" in navigator){
+ window.addEventListener("load",()=>{
+  navigator.serviceWorker.register("./sw.js").catch(()=>{});
+ });
 }
 </script>
-</body>
-</html>
-
 </body>
 </html>
