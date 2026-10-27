@@ -12,7 +12,9 @@
 *{box-sizing:border-box}
 body{margin:0;background:#15151c;color:#f2f0ea;font:15px system-ui,sans-serif}
 header{padding:22px 16px;background:#252331;border-bottom:1px solid #d6b36a}
-h1,h2{color:#d6b36a}h1{margin:0}header p{color:#bbb}
+h1,h2{color:#d6b36a}
+h1{margin:0}
+header p{color:#bbb}
 main{max-width:850px;margin:auto;padding:12px}
 section{background:#22222d;border:1px solid #41404d;border-radius:12px;padding:14px;margin-bottom:13px}
 h2{font-size:19px;margin:0 0 12px}
@@ -33,7 +35,8 @@ button{padding:10px 12px;border-radius:7px;border:1px solid #d6b36a;background:#
 .row .grow{flex:1;min-width:0}
 .row input[type=checkbox]{width:auto}
 .skill{display:grid;grid-template-columns:24px minmax(0,1fr) 35px 46px;gap:5px;align-items:center;padding:7px 0;border-bottom:1px solid #41404d}
-.skill span{font-size:13px}.skill output{color:#d6b36a;text-align:center;font-weight:bold}
+.skill span{font-size:13px}
+.skill output{color:#d6b36a;text-align:center;font-weight:bold}
 .skill label{display:flex;align-items:center;gap:3px;margin:0}
 .skill input[type=checkbox]{width:auto}
 .muted{font-size:12px;color:#bbb}
@@ -46,7 +49,21 @@ button{padding:10px 12px;border-radius:7px;border:1px solid #d6b36a;background:#
 <h1>⚔ Crônica RPG</h1>
 <p>Sua aventura começa na ficha.</p>
 </header>
+
 <main>
+
+<section>
+<h2>Meus personagens</h2>
+<label for="listaPersonagens">Ficha selecionada</label>
+<select id="listaPersonagens"></select>
+<div class="actions" style="margin-top:12px">
+<button type="button" onclick="newCharacter()">+ Novo personagem</button>
+<button type="button" class="secondary" onclick="saveCharacter()">Salvar ficha</button>
+<button type="button" class="danger" onclick="deleteCharacter()">Excluir ficha</button>
+</div>
+<p id="characterStatus" class="muted">Carregando personagens...</p>
+</section>
+
 <section>
 <h2>Identidade</h2>
 <div class="grid">
@@ -159,185 +176,494 @@ button{padding:10px 12px;border-radius:7px;border:1px solid #d6b36a;background:#
 </section>
 
 <section>
-<h2>Salvar personagem</h2>
+<h2>Dados da ficha</h2>
 <div class="actions">
 <button type="button" onclick="saveCharacter()">Salvar ficha</button>
-<button type="button" class="secondary" onclick="loadCharacter()">Carregar ficha</button>
+<button type="button" class="secondary" onclick="loadCharacter()">Carregar ficha selecionada</button>
 <button type="button" class="secondary" onclick="exportCharacter()">Exportar arquivo</button>
-<button type="button" class="danger" onclick="clearCharacter()">Limpar campos</button>
+<button type="button" class="danger" onclick="clearCharacter()">Limpar campos atuais</button>
 </div>
-<div id="status" role="status">Salve sua ficha neste dispositivo.</div>
+<div id="status" role="status">As alterações são salvas automaticamente neste dispositivo.</div>
 </section>
+
 </main>
 <footer style="text-align:center;color:#aaa;padding:16px">Crônica RPG · D&D 2024</footer>
 
 <script>
 "use strict";
-const KEY="cronica-personagem";
-const abilities=["FOR","DES","CON","INT","SAB","CAR"];
-const skills=[
-["Acrobacia","DES"],["Adestrar Animais","SAB"],["Arcanismo","INT"],
-["Atletismo","FOR"],["Atuação","CAR"],["Enganação","CAR"],
-["Furtividade","DES"],["História","INT"],["Intimidação","CAR"],
-["Intuição","SAB"],["Investigação","INT"],["Medicina","SAB"],
-["Natureza","INT"],["Percepção","SAB"],["Persuasão","CAR"],
-["Prestidigitação","DES"],["Religião","INT"],["Sobrevivência","SAB"]
+
+const LEGACY_KEY = "cronica-personagem";
+const MULTI_KEY = "cronica-personagens-v1";
+
+const abilities = ["FOR","DES","CON","INT","SAB","CAR"];
+const skills = [
+ ["Acrobacia","DES"],["Adestrar Animais","SAB"],["Arcanismo","INT"],
+ ["Atletismo","FOR"],["Atuação","CAR"],["Enganação","CAR"],
+ ["Furtividade","DES"],["História","INT"],["Intimidação","CAR"],
+ ["Intuição","SAB"],["Investigação","INT"],["Medicina","SAB"],
+ ["Natureza","INT"],["Percepção","SAB"],["Persuasão","CAR"],
+ ["Prestidigitação","DES"],["Religião","INT"],["Sobrevivência","SAB"]
 ];
-const saves=[["FOR","Força"],["DES","Destreza"],["CON","Constituição"],["INT","Inteligência"],["SAB","Sabedoria"],["CAR","Carisma"]];
-const $=id=>document.getElementById(id);
-const mod=value=>Math.floor(((Number(value)||10)-10)/2);
-const signed=value=>value>=0?"+"+value:String(value);
+const saves = [
+ ["FOR","Força"],["DES","Destreza"],["CON","Constituição"],
+ ["INT","Inteligência"],["SAB","Sabedoria"],["CAR","Carisma"]
+];
+
+const $ = id => document.getElementById(id);
+const mod = value => Math.floor(((Number(value)||10)-10)/2);
+const signed = value => value>=0 ? "+"+value : String(value);
+
+let characters = {};
+let currentCharacterId = null;
 
 function proficiency(){
- const level=Math.max(1,Math.min(20,Number($("nivel").value)||1));
- return 2+Math.floor((level-1)/4)+(Number($("bonusExtra").value)||0);
+ const level = Math.max(1,Math.min(20,Number($("nivel").value)||1));
+ return 2 + Math.floor((level-1)/4) + (Number($("bonusExtra").value)||0);
 }
 
 function buildRows(){
  skills.forEach(([name,ability],i)=>{
-  const row=document.createElement("div");
-  row.className="skill";
-  const prof=document.createElement("input");
-  prof.type="checkbox";prof.id="sp"+i;prof.dataset.save="";
+  const row = document.createElement("div");
+  row.className = "skill";
+
+  const prof = document.createElement("input");
+  prof.type = "checkbox";
+  prof.id = "sp"+i;
+  prof.dataset.save = "";
   prof.setAttribute("aria-label","Proficiência: "+name);
-  const title=document.createElement("span");
-  title.textContent=name+" ("+ability+")";
-  const result=document.createElement("output");
-  result.id="sb"+i;result.textContent="+0";
-  const label=document.createElement("label");
-  const expert=document.createElement("input");
-  expert.type="checkbox";expert.id="se"+i;expert.dataset.save="";
+
+  const title = document.createElement("span");
+  title.textContent = name+" ("+ability+")";
+
+  const result = document.createElement("output");
+  result.id = "sb"+i;
+  result.textContent = "+0";
+
+  const label = document.createElement("label");
+  const expert = document.createElement("input");
+  expert.type = "checkbox";
+  expert.id = "se"+i;
+  expert.dataset.save = "";
   expert.setAttribute("aria-label","Especialização: "+name);
   label.append(expert,document.createTextNode("Esp."));
+
   row.append(prof,title,result,label);
   $("skills").appendChild(row);
  });
+
  saves.forEach(([ability,name])=>{
-  const row=document.createElement("div");row.className="row";
-  const check=document.createElement("input");
-  check.type="checkbox";check.id="save"+ability;check.dataset.save="";
+  const row = document.createElement("div");
+  row.className = "row";
+
+  const check = document.createElement("input");
+  check.type = "checkbox";
+  check.id = "save"+ability;
+  check.dataset.save = "";
   check.setAttribute("aria-label","Proficiência em "+name);
-  const title=document.createElement("span");title.className="grow";title.textContent=name;
-  const result=document.createElement("strong");result.id="saveb"+ability;result.textContent="+0";
-  row.append(check,title,result);$("saves").appendChild(row);
+
+  const title = document.createElement("span");
+  title.className = "grow";
+  title.textContent = name;
+
+  const result = document.createElement("strong");
+  result.id = "saveb"+ability;
+  result.textContent = "+0";
+
+  row.append(check,title,result);
+  $("saves").appendChild(row);
  });
 }
 
 function update(){
- const p=proficiency();
- $("profDisplay").value=signed(p);
- abilities.forEach(a=>$("mod-"+a).textContent=signed(mod($(a).value)));
- $("iniTotal").value=signed(mod($("DES").value)+(Number($("iniExtra").value)||0));
+ const p = proficiency();
+ $("profDisplay").value = signed(p);
+
+ abilities.forEach(a=>{
+  $("mod-"+a).textContent = signed(mod($(a).value));
+ });
+
+ $("iniTotal").value =
+  signed(mod($("DES").value)+(Number($("iniExtra").value)||0));
+
  skills.forEach(([name,a],i)=>{
-  const trained=$("sp"+i).checked;
-  const expert=$("se"+i).checked&&trained;
-  $("sb"+i).textContent=signed(mod($(a).value)+(trained?p:0)+(expert?p:0));
+  const trained = $("sp"+i).checked;
+  const expert = $("se"+i).checked && trained;
+  $("sb"+i).textContent = signed(
+   mod($(a).value)+(trained?p:0)+(expert?p:0)
+  );
  });
+
  saves.forEach(([a])=>{
-  $("saveb"+a).textContent=signed(mod($(a).value)+($("save"+a).checked?p:0));
+  $("saveb"+a).textContent =
+   signed(mod($(a).value)+($("save"+a).checked?p:0));
  });
- const magic=mod($( $("atributoMagia").value ).value)+p+(Number($("bonusMagia").value)||0);
- $("cdMagia").value=8+magic;
- $("ataqueMagia").value=signed(magic);
+
+ const magic =
+  mod($( $("atributoMagia").value ).value) +
+  p +
+  (Number($("bonusMagia").value)||0);
+
+ $("cdMagia").value = 8+magic;
+ $("ataqueMagia").value = signed(magic);
 }
 
 function addAttack(data={}){
- const row=document.createElement("div");row.className="row";row.style.flexWrap="wrap";
- const fields=[
+ const row = document.createElement("div");
+ row.className = "row";
+ row.style.flexWrap = "wrap";
+
+ const fields = [
   ["Nome do ataque","Ex.: Espada longa","nome"],
   ["Bônus de ataque","+5","bonus"],
   ["Dano e tipo","Ex.: 1d8 cortante","dano"]
  ];
+
  fields.forEach(([labelText,placeholder,key])=>{
-  const wrap=document.createElement("div");wrap.className="grow";
-  const label=document.createElement("label");label.textContent=labelText;
-  const input=document.createElement("input");input.dataset.attack=key;input.placeholder=placeholder;input.dataset.save="";
-  input.value=data[key]??(key==="bonus"?0:"");
-  wrap.append(label,input);row.appendChild(wrap);
+  const wrap = document.createElement("div");
+  wrap.className = "grow";
+
+  const label = document.createElement("label");
+  label.textContent = labelText;
+
+  const input = document.createElement("input");
+  input.dataset.attack = key;
+  input.dataset.save = "";
+  input.placeholder = placeholder;
+  input.value = data[key] ?? (key==="bonus" ? 0 : "");
+
+  input.addEventListener("input",()=>{
+   update();
+   autoSaveCurrent();
+  });
+
+  input.addEventListener("change",()=>{
+   update();
+   autoSaveCurrent();
+  });
+
+  wrap.append(label,input);
+  row.appendChild(wrap);
  });
- const remove=document.createElement("button");remove.type="button";remove.className="danger";remove.textContent="×";remove.setAttribute("aria-label","Remover ataque");
- remove.onclick=()=>row.remove();row.appendChild(remove);$("attacks").appendChild(row);
+
+ const remove = document.createElement("button");
+ remove.type = "button";
+ remove.className = "danger";
+ remove.textContent = "×";
+ remove.setAttribute("aria-label","Remover ataque");
+
+ remove.onclick = ()=>{
+  row.remove();
+  autoSaveCurrent();
+ };
+
+ row.appendChild(remove);
+ $("attacks").appendChild(row);
 }
 
 function collect(){
- const data={};
+ const data = {};
+
  document.querySelectorAll("[data-save]").forEach(el=>{
-  if(el.id)data[el.id]=el.type==="checkbox"?el.checked:el.value;
+  if(el.id){
+   data[el.id] = el.type==="checkbox" ? el.checked : el.value;
+  }
  });
- data.attacks=[];
+
+ data.attacks = [];
+
  $("attacks").querySelectorAll(".row").forEach(row=>{
-  const attack={};
-  row.querySelectorAll("[data-attack]").forEach(input=>attack[input.dataset.attack]=input.value);
+  const attack = {};
+  row.querySelectorAll("[data-attack]").forEach(input=>{
+   attack[input.dataset.attack] = input.value;
+  });
   data.attacks.push(attack);
  });
+
  return data;
 }
 
-function apply(data){
+function apply(data={}){
  document.querySelectorAll("[data-save]").forEach(el=>{
-  if(!el.id||!(el.id in data))return;
-  if(el.type==="checkbox")el.checked=Boolean(data[el.id]);
-  else el.value=data[el.id];
+  if(!el.id || !(el.id in data)) return;
+
+  if(el.type==="checkbox") el.checked = Boolean(data[el.id]);
+  else el.value = data[el.id];
  });
- $("attacks").innerHTML="";
- (Array.isArray(data.attacks)?data.attacks:[]).forEach(addAttack);
+
+ $("attacks").innerHTML = "";
+ (Array.isArray(data.attacks) ? data.attacks : []).forEach(addAttack);
  update();
 }
 
-function saveCharacter(){
+function persistCharacters(){
+ localStorage.setItem(MULTI_KEY,JSON.stringify(characters));
+}
+
+function renderCharacters(){
+ const list = $("listaPersonagens");
+ list.innerHTML = "";
+
+ Object.values(characters).forEach(character=>{
+  const option = document.createElement("option");
+  option.value = character.id;
+  option.textContent = character.name || "Personagem sem nome";
+  option.selected = character.id === currentCharacterId;
+  list.appendChild(option);
+ });
+
+ $("characterStatus").textContent =
+  Object.keys(characters).length + " personagem(ns) salvo(s).";
+}
+
+function autoSaveCurrent(){
+ if(!currentCharacterId || !characters[currentCharacterId]) return;
+
  try{
-  localStorage.setItem(KEY,JSON.stringify(collect()));
-  $("status").textContent="Ficha salva neste dispositivo!";
- }catch(error){$("status").textContent="Não foi possível salvar a ficha.";}
+  const character = characters[currentCharacterId];
+  character.data = collect();
+  character.name = $("nome").value.trim() || "Personagem sem nome";
+  character.updatedAt = new Date().toISOString();
+
+  persistCharacters();
+  renderCharacters();
+  $("status").textContent = "Alterações salvas automaticamente.";
+ }catch(error){
+  $("status").textContent = "Não foi possível salvar automaticamente.";
+ }
+}
+
+function saveCharacter(){
+ if(!currentCharacterId || !characters[currentCharacterId]){
+  newCharacter();
+  return;
+ }
+
+ try{
+  const character = characters[currentCharacterId];
+  character.data = collect();
+  character.name = $("nome").value.trim() || "Personagem sem nome";
+  character.updatedAt = new Date().toISOString();
+
+  persistCharacters();
+  renderCharacters();
+
+  $("status").textContent = "Ficha salva neste dispositivo!";
+ }catch(error){
+  $("status").textContent = "Não foi possível salvar a ficha.";
+ }
 }
 
 function loadCharacter(){
- try{
-  const data=JSON.parse(localStorage.getItem(KEY)||"null");
-  if(!data){$("status").textContent="Nenhuma ficha salva neste dispositivo.";return;}
-  apply(data);$("status").textContent="Ficha carregada!";
- }catch(error){$("status").textContent="Não foi possível carregar a ficha.";}
+ if(!currentCharacterId || !characters[currentCharacterId]){
+  $("status").textContent = "Nenhuma ficha selecionada.";
+  return;
+ }
+
+ resetFields();
+ apply(characters[currentCharacterId].data || {});
+ $("status").textContent = "Ficha carregada!";
+}
+
+function selectCharacter(id){
+ if(!characters[id]) return;
+
+ autoSaveCurrent();
+ currentCharacterId = id;
+
+ resetFields();
+ apply(characters[id].data || {});
+ renderCharacters();
+
+ $("status").textContent =
+  "Ficha de " + (characters[id].name || "Personagem sem nome") + " carregada.";
+}
+
+function newCharacter(){
+ autoSaveCurrent();
+
+ const id = "personagem-" + Date.now();
+
+ characters[id] = {
+  id,
+  name: "Novo personagem",
+  data: {},
+  updatedAt: new Date().toISOString()
+ };
+
+ currentCharacterId = id;
+ resetFields();
+
+ $("nome").value = "";
+ characters[id].data = collect();
+
+ persistCharacters();
+ renderCharacters();
+
+ $("status").textContent = "Nova ficha criada. Preencha os dados!";
+}
+
+function deleteCharacter(){
+ if(!currentCharacterId || !characters[currentCharacterId]){
+  $("characterStatus").textContent = "Nenhuma ficha selecionada.";
+  return;
+ }
+
+ const name = characters[currentCharacterId].name || "Personagem sem nome";
+
+ if(!confirm('Deseja excluir a ficha "'+name+'"? Esta ação não pode ser desfeita.')){
+  return;
+ }
+
+ delete characters[currentCharacterId];
+
+ const ids = Object.keys(characters);
+
+ if(ids.length){
+  currentCharacterId = ids[0];
+  resetFields();
+  apply(characters[currentCharacterId].data || {});
+ }else{
+  currentCharacterId = null;
+  newCharacter();
+  return;
+ }
+
+ persistCharacters();
+ renderCharacters();
+ $("status").textContent = "Ficha excluída.";
+}
+
+function resetFields(){
+ document.querySelectorAll("[data-save]").forEach(el=>{
+  if(el.type==="checkbox") el.checked = false;
+  else if(el.tagName==="SELECT") el.selectedIndex = 0;
+  else if(el.type==="number") el.value = "0";
+  else el.value = "";
+ });
+
+ abilities.forEach(a=>$(a).value=10);
+
+ $("nivel").value = 1;
+ $("xp").value = 0;
+ $("pvAtual").value = 10;
+ $("pvMax").value = 10;
+ $("ca").value = 10;
+ $("deslocamento").value = 30;
+ $("attacks").innerHTML = "";
+ update();
 }
 
 function clearCharacter(){
- if(!confirm("Limpar os campos atuais? A ficha salva não será apagada."))return;
- document.querySelectorAll("[data-save]").forEach(el=>{
-  if(el.type==="checkbox")el.checked=false;
-  else if(el.tagName==="SELECT")el.selectedIndex=0;
-  else if(el.type==="number")el.value="0";
-  else el.value="";
- });
- abilities.forEach(a=>$(a).value=10);
- $("nivel").value=1;$("pvAtual").value=10;$("pvMax").value=10;$("ca").value=10;$("deslocamento").value=30;
- $("attacks").innerHTML="";update();
- $("status").textContent="Campos limpos. A ficha salva continua guardada.";
+ if(!confirm("Limpar os campos atuais? A ficha salva não será apagada até você salvar as alterações.")){
+  return;
+ }
+
+ resetFields();
+ $("status").textContent =
+  "Campos limpos. Para guardar essa versão vazia, toque em Salvar ficha.";
 }
 
 function exportCharacter(){
- const blob=new Blob([JSON.stringify(collect(),null,2)],{type:"application/json"});
- const url=URL.createObjectURL(blob);
- const link=document.createElement("a");link.href=url;link.download="cronica-personagem.json";
- document.body.appendChild(link);link.click();link.remove();
+ const data = collect();
+ const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+ const url = URL.createObjectURL(blob);
+ const link = document.createElement("a");
+
+ link.href = url;
+ link.download = (data.nome || "cronica-personagem")
+  .replace(/[^a-z0-9-_]/gi,"-") + ".json";
+
+ document.body.appendChild(link);
+ link.click();
+ link.remove();
  setTimeout(()=>URL.revokeObjectURL(url),1000);
- $("status").textContent="Arquivo de exportação gerado.";
+
+ $("status").textContent = "Arquivo de exportação gerado.";
 }
 
 function rollDice(){
- const sides=Number($("dado").value);
- const count=Math.max(1,Math.min(100,Number($("quantidade").value)||1));
- const bonus=Number($("modDado").value)||0;
- const rolls=Array.from({length:count},()=>Math.floor(Math.random()*sides)+1);
- const total=rolls.reduce((sum,n)=>sum+n,0)+bonus;
- $("diceResult").textContent=rolls.join(" + ")+(bonus?" ("+signed(bonus)+")":"")+" = "+total;
+ const sides = Number($("dado").value);
+ const count = Math.max(1,Math.min(100,Number($("quantidade").value)||1));
+ const bonus = Number($("modDado").value)||0;
+ const rolls = Array.from({length:count},()=>Math.floor(Math.random()*sides)+1);
+ const total = rolls.reduce((sum,n)=>sum+n,0)+bonus;
+
+ $("diceResult").textContent =
+  rolls.join(" + ") +
+  (bonus ? " ("+signed(bonus)+")" : "") +
+  " = " + total;
 }
-function rollD20(){$("dado").value="20";$("quantidade").value="1";rollDice();}
+
+function rollD20(){
+ $("dado").value = "20";
+ $("quantidade").value = "1";
+ rollDice();
+}
+
+function initializeCharacters(){
+ try{
+  const stored = JSON.parse(localStorage.getItem(MULTI_KEY) || "null");
+
+  if(stored && typeof stored==="object" && !Array.isArray(stored)){
+   characters = stored;
+  }
+
+  if(Object.keys(characters).length===0){
+   const oldData = JSON.parse(localStorage.getItem(LEGACY_KEY) || "null");
+
+   if(oldData && typeof oldData==="object"){
+    const id = "personagem-antigo-" + Date.now();
+
+    characters[id] = {
+     id,
+     name: oldData.nome || "Personagem importado",
+     data: oldData,
+     updatedAt: new Date().toISOString()
+    };
+   }
+  }
+ }catch(error){
+  characters = {};
+ }
+
+ if(Object.keys(characters).length===0){
+  const id = "personagem-" + Date.now();
+
+  characters[id] = {
+   id,
+   name: "Novo personagem",
+   data: {},
+   updatedAt: new Date().toISOString()
+  };
+ }
+
+ currentCharacterId = Object.keys(characters)[0];
+
+ resetFields();
+ apply(characters[currentCharacterId].data || {});
+ persistCharacters();
+ renderCharacters();
+}
 
 buildRows();
-document.querySelectorAll("input,select").forEach(el=>{
- el.addEventListener("input",update);
- el.addEventListener("change",update);
+
+document.querySelectorAll("input,select,textarea").forEach(el=>{
+ el.addEventListener("input",()=>{
+  update();
+  if(el.hasAttribute("data-save")) autoSaveCurrent();
+ });
+
+ el.addEventListener("change",()=>{
+  update();
+  if(el.hasAttribute("data-save")) autoSaveCurrent();
+ });
 });
-update();
+
+$("listaPersonagens").addEventListener("change",event=>{
+ selectCharacter(event.target.value);
+});
+
+initializeCharacters();
 
 if("serviceWorker" in navigator){
  window.addEventListener("load",()=>{
